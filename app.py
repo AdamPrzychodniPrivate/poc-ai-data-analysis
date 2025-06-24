@@ -7,13 +7,14 @@ from query_executor import execute_query
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="AI Data Analysis for Jäppinen Ltd.",
+    page_title="AI Data Analysis",
     page_icon="🤖",
-    layout="wide"
+    # FIX: Changed layout from "wide" to "centered" to center all UI elements
+    layout="centered"
 )
 
 # --- Main Application ---
-st.title("🤖 AI Data Analysis for Jäppinen Ltd.")
+st.title("🤖 AI Data Analysis")
 st.caption("A Proof of Concept for natural language data interaction.")
 
 # --- Load Data ---
@@ -62,10 +63,7 @@ if df_main is not None:
                 schema = get_schema(df_main)
                 sql_query = generate_sql(chat_history=chat_history_for_api, schema=schema)
 
-                # *** FIX APPLIED HERE: The indented blocks are now correctly filled in. ***
-
                 if sql_query.startswith("Error:"):
-                    # This block was missing its content, causing the error.
                     response_content = f"Sorry, I encountered an error during SQL generation:\n\n`{sql_query}`"
                     st.error(response_content)
                     st.session_state.messages.append({
@@ -78,7 +76,6 @@ if df_main is not None:
                     result_df, error = execute_query(sql_query, df_main)
 
                     if error:
-                        # This block was also missing.
                         response_content = f"I encountered an error running the query:\n\n`{error}`"
                         st.error(response_content)
                         st.session_state.messages.append({
@@ -87,7 +84,6 @@ if df_main is not None:
                     
                     elif result_df is not None:
                         if result_df.empty:
-                            # And this block was missing.
                             response_content = "The query ran successfully but returned no results."
                             st.warning(response_content)
                             st.session_state.messages.append({
@@ -100,7 +96,6 @@ if df_main is not None:
                             
                             fig = None
                             
-                            # Robust plotting logic
                             numeric_cols = result_df.select_dtypes(include='number').columns
                             if not result_df.empty and len(result_df.columns) >= 2 and len(numeric_cols) > 0:
                                 

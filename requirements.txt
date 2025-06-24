@@ -12,3 +12,6 @@ openai>=1.1.0
 
 # Data Visualization
 plotly>=5.18.0
+
+# API key management
+python-dotenv>=0.21.0

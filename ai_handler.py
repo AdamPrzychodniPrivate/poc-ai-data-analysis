@@ -1,11 +1,14 @@
 import os
 import streamlit as st
+from dotenv import load_dotenv
 from openai import OpenAI
 import pandas as pd
-# FIX: Import the necessary types for casting
 from typing import List, Dict, cast
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
+
+# Load environment variables from .env file
+load_dotenv()
 
 # --- Securely Load API Key ---
 # Make sure your OPENAI_API_KEY is set as an environment variable
@@ -39,7 +42,6 @@ def generate_sql(chat_history: List[Dict[str, str]], schema: str) -> str:
     3.  Do NOT include any explanations, comments, or markdown formatting. Only output the raw SQL query.
     """
     
-    # FIX: The messages list is created from generic dicts, which is fine.
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(chat_history)
 
