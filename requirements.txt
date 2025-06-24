@@ -1,0 +1,13 @@
+# Data Handling
+pandas>=2.0.0 # For data loading and manipulation
+openpyxl>=3.1.0 # Required by pandas to read .xlsx files
+pandasql>=0.7.0 # To execute SQL queries on pandas DataFrames
+
+# User Interface
+streamlit>=1.30.0 # For building the interactive web application
+
+# AI Interaction
+openai>=1.1.0 # To interact with the OpenAI API (gpt-4o-mini)
+
+# Data Visualization
+plotly>=5.18.0 # For creating interactive charts
