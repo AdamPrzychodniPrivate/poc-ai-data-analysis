@@ -67,53 +67,86 @@ def generate_sql(chat_history: List[Dict[str, str]], schema: str) -> str:
 
 def generate_plotly_code(data: pd.DataFrame, question: str) -> str:
     """
-    Generates Python code for a Plotly chart.
+    Generates enhanced Python code for a Plotly chart.
+    
+    Returns:
+        str: A string containing the Python code for the Plotly figure.
     """
-    data_sample = data.to_markdown(index=False)
+    # --- FIX APPLIED HERE ---
+    # Instead of the whole DataFrame, send only the first 5 rows as a sample.
+    # This dramatically reduces the number of tokens sent to the API.
+    data_sample = data.head(5).to_markdown(index=False)
+    # --- END OF FIX ---
+
     columns = data.columns.tolist()
     
+    # Identify numeric and categorical columns to help the AI
+    numeric_cols = data.select_dtypes(include=['number']).columns.tolist()
+    categorical_cols = data.select_dtypes(include=['object', 'category']).columns.tolist()
+
     prompt = f"""
-    You are a data visualization expert specializing in Plotly. Your task is to write Python code
-    to generate a Plotly chart that answers the user's question based on the provided data.
+    You are a data visualization expert specializing in the Plotly library in Python.
+    Your task is to write Python code to generate a single, visually appealing, and informative Plotly figure
+    that effectively answers the user's question based on the provided data sample.
 
     **User's Original Question:**
     "{question}"
 
-    **Data to Visualize (this is the result of the last query, available as a DataFrame named `df`):**
-    ```
+    **Data Sample to Visualize (this is a sample, the full data is available in the `df` variable):**
+    ```markdown
     {data_sample}
     ```
 
-    **CRITICAL INSTRUCTIONS:**
-    1.  The data to be plotted has the following exact column names: `{columns}`. You **MUST** use these column names for the `x` and `y` axes in your code.
-    2.  Generate Python code that creates a Plotly figure and assigns it to a variable named `fig`.
-    3.  Choose the best chart type (e.g., bar, line, pie) to answer the question. For the provided data, a bar chart is likely best.
-    4.  The code must be a single block. **Do NOT include `import` statements or `fig.show()`**.
-    5.  Make the chart title and axis labels clear and descriptive. Use `template='plotly_white'` for a clean look.
+    **DataFrame Column Information:**
+    - All Columns: `{columns}`
+    - Numeric Columns: `{numeric_cols}`
+    - Categorical Columns: `{categorical_cols}`
 
-    **Example for columns ['Fiscal_Year_1', 'Total_Transaction_Value']:**
+    **CRITICAL INSTRUCTIONS:**
+
+    1.  **Figure Variable:** The generated Plotly figure **MUST** be assigned to a variable named `fig`.
+    2.  **No Imports or Displaying:** The code block must NOT include any `import` statements or `fig.show()`.
+    3.  **Chart Type Selection:** Choose the best chart type to answer the question.
+        - Use `px.bar` for comparisons of categorical data.
+        - Use `px.line` for time-series data or trends over continuous intervals.
+        - Use `px.pie` or `px.donut` for showing parts of a whole (use sparingly, preferably with few categories).
+        - Use `px.scatter` for relationships between two numeric variables.
+        - Use `px.histogram` for distributions of a single variable.
+    4.  **Aesthetics and Clarity:**
+        - **Template:** Use `template='plotly_dark'` for a modern look.
+        - **Title:** Create a clear, descriptive title for the chart that directly relates to the user's question.
+        - **Axis Labels:** Use clear and descriptive labels for the x and y axes. If an axis represents a monetary value, reflect that in the label (e.g., 'Total Sales ($)').
+        - **Colors:** If creating a bar or pie chart, use a visually appealing, non-default color scale like `color_discrete_sequence=px.colors.qualitative.Pastel`.
+        - **Hover Data:** Enhance the tooltips (`hover_data`). Format them to be readable. For example, for currency, format it like `':$,.2f'`.
+        - **Categorical Axes:** If an axis (especially the x-axis) represents categories like years or names, ensure it's treated as a categorical type to prevent weird spacing issues (e.g., `fig.update_xaxes(type='category')`).
+    5.  **Data Columns:** You **MUST** use the exact column names provided: `{columns}`. Do not invent or assume column names.
+
+    **Example of Excellent Code (for columns ['Year', 'Total_Revenue']):**
     ```python
+    # Answering: "What was the total revenue per year?"
     fig = px.bar(
         df,
-        x='{columns[0]}',
-        y='{columns[1]}',
-        title='Total Transaction Value by Year',
-        template='plotly_white'
+        x='Year',
+        y='Total_Revenue',
+        title='Total Revenue by Year',
+        color='Year',
+        color_discrete_sequence=px.colors.qualitative.Pastel,
+        template='plotly_dark'
     )
-    fig.update_xaxes(type='category') # Treat year as a category for correct spacing
+    fig.update_layout(
+        xaxis_title='Fiscal Year',
+        yaxis_title='Total Revenue ($)',
+        showlegend=False
+    )
+    fig.update_xaxes(type='category')
+    fig.update_traces(hovertemplate='<b>Year:</b> %{{x}}<br><b>Total Revenue:</b> %{{y:$,.2f}}<extra></extra>')
     ```
 
     **Your Turn (Use the exact column names `{columns}`):**
-    Python Code:
     """
-    
-    # This logic does not call the OpenAI client, so it does not need the same fix.
-    # We will apply the same fix if we were to change this to also be conversational.
-    # For now, keeping the same logic as before is fine.
 
-    # Let's apply the fix here as well for consistency, assuming we might make it conversational later.
     messages_for_plot = [
-        {"role": "system", "content": "You are an expert assistant that generates Python code for Plotly visualizations using exact column names."},
+        {"role": "system", "content": "You are an expert assistant that generates Python code for Plotly visualizations following strict guidelines."},
         {"role": "user", "content": prompt}
     ]
 
@@ -132,5 +165,5 @@ def generate_plotly_code(data: pd.DataFrame, question: str) -> str:
             return ""
 
     except Exception as e:
-        print(f"Error generating Plotly code: {e}")
-        return ""
+        # It's good practice to return the error string for handling in the main app
+        return f"Error generating Plotly code: {e}"
