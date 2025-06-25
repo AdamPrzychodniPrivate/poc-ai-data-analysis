@@ -12,7 +12,7 @@ This repository contains the Proof of Concept (PoC) for an AI-powered data analy
 
 * **Live Demo (Loom):** [![AI Data Analysis PoC Demo](https://cdn.loom.com/sessions/thumbnails/c37018e3d1c14ac9af0c42264242e081-00001.gif)](https://www.loom.com/share/c37018e3d1c14ac9af0c42264242e081?sid=35febca0-2ee1-43f6-b857-c61a4ce2a9fc)
 
-* **Deployed App (Lightning AI):** [Interact with the live PoC here](https://8501-01jygta8j1xy2vare2v60e3myb.cloudspaces.litng.ai)
+* **Deployed App (Lightning AI):** [Interact with the live PoC here](https://www.loom.com/share/c37018e3d1c14ac9af0c42264242e081?sid=7bb2a435-27ca-407f-bcd8-e6605fdf914a)
 
 ## ✨ Core Features
 
