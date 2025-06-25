@@ -69,7 +69,7 @@ The AI remembers the context of your conversation. This means you can ask follow
 
 This guide explains the components of the application screen.
 
-![A diagram of the user interface showing the main sections: the title, the raw data expander, the chat history, and the chat input box.](https://storage.googleapis.com/bard-public/images/2024/06/25/11/image_0.png)
+![alt text](image-2.png)
 
 1.  **Application Title:** At the top of the page, displays the name of the application.
 2.  **View Raw Data Source:** A single, collapsible section that contains your full, original dataset. Click to open, click again to close.
