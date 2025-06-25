@@ -167,3 +167,56 @@ def generate_plotly_code(data: pd.DataFrame, question: str) -> str:
     except Exception as e:
         # It's good practice to return the error string for handling in the main app
         return f"Error generating Plotly code: {e}"
+
+
+# ai_handler.py
+
+# ... (existing imports and code) ...
+
+def generate_data_summary(data: pd.DataFrame, question: str) -> str:
+    """
+    Generates a concise textual summary of the queried data and its visualization.
+    """
+    # Limit the data sample to save tokens and focus the summary on key aspects
+    data_sample_for_summary = data.head(10).to_markdown(index=False)
+    
+    summary_prompt = f"""
+    You are an expert data analyst. Your task is to provide a very concise, 
+    plain-language summary of the insights from the provided data, 
+    especially focusing on what a visualization of this data would highlight.
+
+    **User's Original Question:**
+    "{question}"
+
+    **Queried Data Sample:**
+    ```markdown
+    {data_sample_for_summary}
+    ```
+
+    **Instructions:**
+    1.  Keep the summary to 1-2 sentences, max 50 words.
+    2.  Focus on the main trend, key figures, or the most important insight presented in the data, 
+        as if describing what a chart of this data would clearly show.
+    3.  Avoid technical jargon. Use natural, business-friendly language.
+    4.  Do NOT include any code, markdown formatting (like ```), or conversational filler.
+        Just the summary text.
+    """
+
+    messages_for_summary = [
+        {"role": "system", "content": "You are a concise data summarization expert."},
+        {"role": "user", "content": summary_prompt}
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=cast(List[ChatCompletionMessageParam], messages_for_summary),
+            temperature=0.3, # A bit higher temperature for more varied summaries
+        )
+        message_content = response.choices[0].message.content
+        if message_content:
+            return message_content.strip()
+        else:
+            return "No summary could be generated."
+    except Exception as e:
+        return f"Error generating summary: {e}"
