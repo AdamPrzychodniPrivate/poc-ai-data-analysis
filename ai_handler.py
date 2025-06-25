@@ -10,9 +10,8 @@ from openai.types.chat.chat_completion_message_param import ChatCompletionMessag
 # Load environment variables from .env file
 load_dotenv()
 
-# --- Securely Load API Key ---
-# Make sure your OPENAI_API_KEY is set as an environment variable
-API_KEY = os.getenv("OPENAI_API_KEY") 
+# Securely Load API Key
+API_KEY = os.getenv("OPENAI_API_KEY")
 
 if not API_KEY:
     st.error("OpenAI API key is not set. Please set it as an environment variable.")
@@ -25,6 +24,7 @@ MODEL = "gpt-4o-mini"
 def generate_sql(chat_history: List[Dict[str, str]], schema: str) -> str:
     """
     Generates a pandasql-compatible SQL query from a full conversation history.
+    Returns: The generated SQL query string, or an error message if generation fails.
     """
     system_prompt = f"""
     You are an expert data analyst who writes SQL queries.
@@ -41,19 +41,17 @@ def generate_sql(chat_history: List[Dict[str, str]], schema: str) -> str:
     2.  Generate a single, complete SQL query that answers the user's latest prompt.
     3.  Do NOT include any explanations, comments, or markdown formatting. Only output the raw SQL query.
     """
-    
+
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(chat_history)
 
     try:
-        # FIX: We apply the 'cast' here, right as we pass the data to the client.
-        # This tells the type checker that the 'messages' list is structured correctly.
         response = client.chat.completions.create(
             model=MODEL,
             messages=cast(List[ChatCompletionMessageParam], messages),
             temperature=0.0,
         )
-        
+
         message_content = response.choices[0].message.content
         if message_content:
             sql_query = message_content.strip().replace("```sql", "").replace("```", "")
@@ -68,18 +66,15 @@ def generate_sql(chat_history: List[Dict[str, str]], schema: str) -> str:
 def generate_plotly_code(data: pd.DataFrame, question: str) -> str:
     """
     Generates enhanced Python code for a Plotly chart.
-    
+
     Returns:
         str: A string containing the Python code for the Plotly figure.
     """
-    # --- FIX APPLIED HERE ---
-    # Instead of the whole DataFrame, send only the first 5 rows as a sample.
-    # This dramatically reduces the number of tokens sent to the API.
+    # Limit the data sample to save tokens and focus the summary on key aspects
     data_sample = data.head(5).to_markdown(index=False)
-    # --- END OF FIX ---
 
     columns = data.columns.tolist()
-    
+
     # Identify numeric and categorical columns to help the AI
     numeric_cols = data.select_dtypes(include=['number']).columns.tolist()
     categorical_cols = data.select_dtypes(include=['object', 'category']).columns.tolist()
@@ -159,30 +154,28 @@ def generate_plotly_code(data: pd.DataFrame, question: str) -> str:
         message_content = response.choices[0].message.content
         if message_content:
             plotly_code = message_content.strip().replace("```python", "").replace("```", "")
-            plotly_code = "\n".join([line for line in plotly_code.split('\n') if not line.strip().startswith('import')])
+            plotly_code_lines = plotly_code.split('\n')
+            cleaned_plotly_code_lines = [line for line in plotly_code_lines if not line.strip().startswith('import ')]
+            plotly_code = "\n".join(cleaned_plotly_code_lines)
             return plotly_code
         else:
             return ""
 
     except Exception as e:
-        # It's good practice to return the error string for handling in the main app
         return f"Error generating Plotly code: {e}"
 
-
-# ai_handler.py
-
-# ... (existing imports and code) ...
 
 def generate_data_summary(data: pd.DataFrame, question: str) -> str:
     """
     Generates a concise textual summary of the queried data and its visualization.
+    Returns: A concise textual summary string, or an error message if summary generation fails.
     """
     # Limit the data sample to save tokens and focus the summary on key aspects
     data_sample_for_summary = data.head(10).to_markdown(index=False)
-    
+
     summary_prompt = f"""
-    You are an expert data analyst. Your task is to provide a very concise, 
-    plain-language summary of the insights from the provided data, 
+    You are an expert data analyst. Your task is to provide a very concise,
+    plain-language summary of the insights from the provided data,
     especially focusing on what a visualization of this data would highlight.
 
     **User's Original Question:**
@@ -195,7 +188,7 @@ def generate_data_summary(data: pd.DataFrame, question: str) -> str:
 
     **Instructions:**
     1.  Keep the summary to 1-2 sentences, max 50 words.
-    2.  Focus on the main trend, key figures, or the most important insight presented in the data, 
+    2.  Focus on the main trend, key figures, or the most important insight presented in the data,
         as if describing what a chart of this data would clearly show.
     3.  Avoid technical jargon. Use natural, business-friendly language.
     4.  Do NOT include any code, markdown formatting (like ```), or conversational filler.

@@ -8,7 +8,6 @@ from ai_handler import generate_sql, generate_plotly_code, generate_data_summary
 from query_executor import execute_query
 
 
-# --- 2. CONSTRUCT A RELIABLE FILE PATH ---
 # Get the directory where this script (app.py) is located
 APP_DIR = Path(__file__).parent
 # Construct the full, absolute path to the data file
@@ -37,9 +36,7 @@ def cached_load_data(file_path):
     """
     return load_data(file_path)
 
-
-# --- 3. USE THE NEW, ROBUST PATH ---
-# This now uses the absolute path we created above
+# Load the main DataFrame using the cached function
 df_main = cached_load_data(DATA_FILE_PATH)
 
 
@@ -57,13 +54,12 @@ if df_main is not None:
     if 'messages' not in st.session_state:
         st.session_state.messages = [{
             "role": "assistant",
-            # Updated welcome message, removed the example question
             "content": "Hello! I'm your AI Data Analyst. How can I help you explore your data today?",
             "dataframe": None,
             "plot": None,
-            "sql_query": None, # Add a key for SQL query
-            "plotly_code": None, # Add a key for Plotly code
-            "summary": None # Add a key for the data summary
+            "sql_query": None,
+            "plotly_code": None, 
+            "summary": None 
         }]
     
     # Initialize a state variable to hold the prompt from a button click
@@ -80,12 +76,12 @@ if df_main is not None:
         with st.chat_message(msg["role"]):
             # Display summary first if it exists in the message
             if msg.get("summary") is not None:
-                st.markdown(f"**Summary:** {msg['summary']}") # Bold the summary for emphasis
+                st.markdown(f"**Summary:** {msg['summary']}") 
             
             # Display the main content of the message
             st.markdown(msg["content"])
             
-            # --- Reordered: Display SQL Query before DataFrame ---
+            # --- Display SQL Query before DataFrame ---
             if msg.get("sql_query") is not None:
                 with st.expander("View Generated SQL Query"):
                     st.code(msg["sql_query"], language="sql")
@@ -94,7 +90,7 @@ if df_main is not None:
             if isinstance(msg.get("dataframe"), pd.DataFrame) and not msg["dataframe"].empty:
                 st.dataframe(msg["dataframe"], use_container_width=True)
             
-            # --- Reordered: Display Plotly Code before Plot ---
+            # --- Display Plotly Code before Plot ---
             if msg.get("plotly_code") is not None:
                 with st.expander("View Generated Visualization Code"):
                     st.code(msg["plotly_code"], language="python")
@@ -167,11 +163,11 @@ if df_main is not None:
                     st.session_state.messages.append(new_assistant_message)
                     st.rerun() # Rerun to display the error message
 
-                # --- Reordered: Display SQL Query before data/plot generation ---
+                # --- Display SQL Query before data/plot generation ---
                 with st.expander("View Generated SQL Query"):
                     st.code(sql_query, language="sql")
                 
-                # Step 2: Execute the generated SQL Query
+                # Execute the generated SQL Query
                 result_df, error = execute_query(sql_query, df_main)
 
                 # Handle errors during SQL execution
@@ -182,7 +178,7 @@ if df_main is not None:
                     st.session_state.messages.append(new_assistant_message)
                     st.rerun() # Rerun to display the error message
 
-                # Step 3: Handle Query Results, Generate Plot, and Generate Summary
+                # Handle Query Results, Generate Plot, and Generate Summary
                 if result_df is None or result_df.empty:
                     response_content = "The query ran successfully but returned no results."
                     st.warning(response_content)
@@ -214,7 +210,7 @@ if df_main is not None:
                             new_assistant_message["plotly_code"] = plotly_code # Store the generated Plotly code
                             
                             if plotly_code:
-                                # --- Reordered: Display Plotly Code before the plot ---
+                                # --- Display Plotly Code before the plot ---
                                 with st.expander("View Generated Visualization Code"):
                                     st.code(plotly_code, language="python")
                                 try:

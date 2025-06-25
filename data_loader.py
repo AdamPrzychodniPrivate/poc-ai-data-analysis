@@ -54,22 +54,3 @@ def get_schema(df: Optional[pd.DataFrame]) -> str:
     for column in df.columns:
         schema += f"- Column: '{column}' (Type: {df[column].dtype})\n"
     return schema
-
-# Example of how to use the functions for standalone testing
-if __name__ == '__main__':
-    # Define the path to the data file, now located in the 'data' subfolder
-    file_path = 'data/Data Dump - Accrual Accounts.xlsx'
-    
-    # Load the data using the load_data function
-    data_df = load_data(file_path)
-
-    if data_df is not None:
-        print("Data loaded successfully!")
-        print("First 5 rows of the DataFrame:")
-        print(data_df.head())
-        print("\n" + "="*50 + "\n")
-        
-        # Get and print the schema information from the loaded DataFrame
-        schema_info = get_schema(data_df)
-        print("DataFrame Schema:")
-        print(schema_info)
