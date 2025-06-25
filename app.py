@@ -4,8 +4,7 @@ import plotly.express as px
 from pathlib import Path
 
 from data_loader import load_data, get_schema
-# Import the new generate_data_summary function
-from ai_handler import generate_sql, generate_plotly_code, generate_data_summary 
+from ai_handler import generate_sql, generate_plotly_code, generate_data_summary
 from query_executor import execute_query
 
 
@@ -19,7 +18,7 @@ DATA_FILE_PATH = APP_DIR / "data" / "Data Dump - Accrual Accounts.xlsx"
 # --- Page Configuration ---
 st.set_page_config(
     page_title="AI Data Analysis",
-    page_icon="🤖",
+    page_icon="�",
     layout="wide"
 )
 
@@ -58,13 +57,22 @@ if df_main is not None:
     if 'messages' not in st.session_state:
         st.session_state.messages = [{
             "role": "assistant",
-            "content": "Hello! I'm your AI Data Analyst. How can I help you explore your data today? Try asking 'What is the total transaction value for each fiscal year, based on Fiscal_Year_1?'",
+            # Updated welcome message, removed the example question
+            "content": "Hello! I'm your AI Data Analyst. How can I help you explore your data today?",
             "dataframe": None,
             "plot": None,
             "sql_query": None, # Add a key for SQL query
             "plotly_code": None, # Add a key for Plotly code
             "summary": None # Add a key for the data summary
         }]
+    
+    # Initialize a state variable to hold the prompt from a button click
+    if 'user_input_prompt' not in st.session_state:
+        st.session_state.user_input_prompt = ""
+
+    # New state variable to control the visibility of the example button
+    if 'show_example_button' not in st.session_state:
+        st.session_state.show_example_button = True
 
 
     # Display all past messages in the chat interface
@@ -95,10 +103,29 @@ if df_main is not None:
                 with st.expander("View Generated Visualization Code"):
                     st.code(msg["plotly_code"], language="python")
 
+    # --- Button for Example Question ---
+    example_question = "What is the total transaction value for each fiscal year, based on Fiscal_Year_1?"
+    # Only show the button if 'show_example_button' is True
+    if st.session_state.show_example_button:
+        if st.button(f"Try: '{example_question}'"):
+            st.session_state.user_input_prompt = example_question
+            st.session_state.show_example_button = False # Hide the button after clicking
+            st.rerun() # Rerun to process the new prompt
+
 
     # --- Chat Input and Full AI Logic ---
     # Handle user input from the chat input box
-    if prompt := st.chat_input("Ask a question about your data..."):
+    # Use the prompt from the button if available, otherwise use the regular chat input
+    if st.session_state.user_input_prompt:
+        prompt = st.session_state.user_input_prompt
+        st.session_state.user_input_prompt = "" # Clear the prompt after using it
+    else:
+        prompt = st.chat_input("Ask a question about your data...")
+
+    if prompt: # Only proceed if there is a prompt
+        # If a prompt is submitted (either by typing or from the button), hide the example button
+        st.session_state.show_example_button = False 
+
         # Append user message to session state and display it immediately
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -218,4 +245,4 @@ if df_main is not None:
 else:
     # Display a critical error if the data file could not be loaded
     st.error("🔴 Critical Error: The data file could not be loaded. The application cannot continue.")
-
+    
