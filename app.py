@@ -18,7 +18,7 @@ DATA_FILE_PATH = APP_DIR / "data" / "Data Dump - Accrual Accounts.xlsx"
 # --- Page Configuration ---
 st.set_page_config(
     page_title="AI Data Analysis",
-    page_icon="�",
+    page_icon="🤖",
     layout="wide"
 )
 
@@ -85,23 +85,25 @@ if df_main is not None:
             # Display the main content of the message
             st.markdown(msg["content"])
             
+            # --- Reordered: Display SQL Query before DataFrame ---
+            if msg.get("sql_query") is not None:
+                with st.expander("View Generated SQL Query"):
+                    st.code(msg["sql_query"], language="sql")
+
             # Display DataFrame if it exists and is not empty
             if isinstance(msg.get("dataframe"), pd.DataFrame) and not msg["dataframe"].empty:
                 st.dataframe(msg["dataframe"], use_container_width=True)
             
+            # --- Reordered: Display Plotly Code before Plot ---
+            if msg.get("plotly_code") is not None:
+                with st.expander("View Generated Visualization Code"):
+                    st.code(msg["plotly_code"], language="python")
+
             # Display plot if it exists
             if msg.get("plot") is not None:
                 st.plotly_chart(msg["plot"], use_container_width=True)
             
-            # Display the generated SQL Query in a collapsible expander
-            if msg.get("sql_query") is not None:
-                with st.expander("View Generated SQL Query"):
-                    st.code(msg["sql_query"], language="sql")
-            
-            # Display the generated Plotly Code in a collapsible expander
-            if msg.get("plotly_code") is not None:
-                with st.expander("View Generated Visualization Code"):
-                    st.code(msg["plotly_code"], language="python")
+
 
     # --- Button for Example Question ---
     example_question = "What is the total transaction value for each fiscal year, based on Fiscal_Year_1?"
@@ -165,7 +167,7 @@ if df_main is not None:
                     st.session_state.messages.append(new_assistant_message)
                     st.rerun() # Rerun to display the error message
 
-                # Display the generated SQL query in an expander for transparency
+                # --- Reordered: Display SQL Query before data/plot generation ---
                 with st.expander("View Generated SQL Query"):
                     st.code(sql_query, language="sql")
                 
@@ -188,7 +190,7 @@ if df_main is not None:
                     st.session_state.messages.append(new_assistant_message)
                 
                 else:
-                    # --- NEW: Generate and display a summary of the data ---
+                    # --- Generate and display a summary of the data ---
                     with st.spinner("Generating summary..."):
                         summary_text = generate_data_summary(result_df, prompt)
                         new_assistant_message["summary"] = summary_text # Store the summary
@@ -212,7 +214,7 @@ if df_main is not None:
                             new_assistant_message["plotly_code"] = plotly_code # Store the generated Plotly code
                             
                             if plotly_code:
-                                # Display the generated Plotly code in an expander for transparency
+                                # --- Reordered: Display Plotly Code before the plot ---
                                 with st.expander("View Generated Visualization Code"):
                                     st.code(plotly_code, language="python")
                                 try:
@@ -245,4 +247,3 @@ if df_main is not None:
 else:
     # Display a critical error if the data file could not be loaded
     st.error("🔴 Critical Error: The data file could not be loaded. The application cannot continue.")
-    
